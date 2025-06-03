@@ -64,9 +64,6 @@ Here are some of the translations supported by default:
 - To support more languages, just add their respective JSON files into the `/json` directory and update the `availableBibles` object in the HTML.
 - You can modify the CSS directly in the `<style>` tag for further UI customizations.
 
-## 📜 License
-
-This project is open-source and available under the [MIT License](https://opensource.org/licenses/MIT).
 
 ---
 
