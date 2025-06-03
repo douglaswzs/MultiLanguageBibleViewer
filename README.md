@@ -2,6 +2,10 @@
 
 A lightweight and flexible web-based tool for reading and comparing Bible verses in multiple languages side-by-side. Includes pronunciation support for Chinese (Jyutping and Pinyin) to help with learning and understanding the text.
 
+DEMO
+
+[https://douglaswzs.github.io/MultiLanguageBibleViewer/](https://douglaswzs.github.io/MultiLanguageBibleViewer)
+
 ## ✨ Features
 
 - Select up to **three languages** to compare Bible verses
