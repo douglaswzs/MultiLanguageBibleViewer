@@ -200,8 +200,8 @@ function applyQueryParams() {
 
       try {
         if (!bibleCache[langKey]) {
-          const res = await fetch(https://raw.githubusercontent.com/thiagobodruk/bible/master/json/${langKey}.json);
-		  // const res = await fetch(./json/${langKey}.json);
+          // const res = await fetch(https://raw.githubusercontent.com/thiagobodruk/bible/master/json/${langKey}.json);
+		  const res = await fetch(./json/${langKey}.json);
           bibleCache[langKey] = await res.json();
         }
         const bible = bibleCache[langKey];
