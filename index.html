@@ -152,7 +152,7 @@
     book.chapters.forEach((_, idx) => {
       const opt = document.createElement("option");
       opt.value = idx;
-      opt.textContent = Chapter ${idx + 1};
+      opt.textContent = `Chapter ${idx + 1}`;
       chapterSelect.appendChild(opt);
     });
   }
@@ -181,7 +181,7 @@ function applyQueryParams() {
   // Defer jump to verse until after data loads
   if (verse) {
     setTimeout(() => {
-      document.getElementById("verseJump").value = ${chapter}:${verse};
+      document.getElementById("verseJump").value = `${chapter}:${verse}`;
       jumpToVerse();
     }, 1000);
   }
@@ -200,8 +200,8 @@ function applyQueryParams() {
 
       try {
         if (!bibleCache[langKey]) {
-          // const res = await fetch(https://raw.githubusercontent.com/thiagobodruk/bible/master/json/${langKey}.json);
-		  const res = await fetch(./json/${langKey}.json);
+          // const res = await fetch(`https://raw.githubusercontent.com/thiagobodruk/bible/master/json/${langKey}.json`);
+		  const res = await fetch(`./json/${langKey}.json`);
           bibleCache[langKey] = await res.json();
         }
         const bible = bibleCache[langKey];
@@ -230,7 +230,7 @@ function applyQueryParams() {
 		headerRow.appendChild(th);
         booksForRender.push({ ...book, langKey });
       } catch (err) {
-        console.error(Error loading ${langKey}:, err);
+        console.error(`Error loading ${langKey}:`, err);
         booksForRender.push(null);
       }
     }
@@ -248,14 +248,14 @@ function applyQueryParams() {
 
     for (let v = 0; v < maxVerses; v++) {
       const tr = document.createElement("tr");
-      tr.setAttribute("data-chapter-verse", ${chapIdx + 1}:${v + 1});
-	  tr.setAttribute("data-verse", ${v + 1});
+      tr.setAttribute("data-chapter-verse", `${chapIdx + 1}:${v + 1}`);
+	  tr.setAttribute("data-verse", `${v + 1}`);
       books.forEach(book => {
 		if (!book) return; // skip rendering empty column
         const td = document.createElement("td");
         if (book && book.chapters[chapIdx][v]) {
           const verse = book.chapters[chapIdx][v];
-          const verseTxt = ${v + 1}: ${verse};
+          const verseTxt = `${v + 1}: ${verse}`;
           td.appendChild(Object.assign(document.createElement("div"), { textContent: verseTxt }));
 
           if (book.langKey === "zh_cuv" || book.langKey === "zh_ncv") {
@@ -294,7 +294,7 @@ function applyQueryParams() {
 	});
 	const storedVerse = localStorage.getItem("selectedChapterVerse");
 	if (storedVerse) {
-	  const previouslySelected = document.querySelector(tr[data-chapter-verse='${storedVerse}']);
+	  const previouslySelected = document.querySelector(`tr[data-chapter-verse='${storedVerse}']`);
 	  if (previouslySelected) {
 		previouslySelected.classList.add("highlighted");
 	  }
@@ -361,9 +361,9 @@ function applyQueryParams() {
       onBookOrChapterChange();
 
       setTimeout(() => {
-        const target = ${chapter + 1}:${verse};
+        const target = `${chapter + 1}:${verse}`;
         document.querySelectorAll(".highlighted").forEach(el => el.classList.remove("highlighted"));
-        const row = document.querySelector(tr[data-chapter-verse='${target}']);
+        const row = document.querySelector(`tr[data-chapter-verse='${target}']`);
         if (row) {
           row.scrollIntoView({ behavior: "smooth", block: "start" });
           row.classList.add("highlighted");
@@ -378,9 +378,9 @@ function applyQueryParams() {
       onBookOrChapterChange();
 
       setTimeout(() => {
-        const target = ${chapter + 1}:${verse};
+        const target = `${chapter + 1}:${verse}`;
         document.querySelectorAll(".highlighted").forEach(el => el.classList.remove("highlighted"));
-        const row = document.querySelector(tr[data-chapter-verse='${target}']);
+        const row = document.querySelector(`tr[data-chapter-verse='${target}']`);
         if (row) {
           row.scrollIntoView({ behavior: "smooth", block: "start" });
           row.classList.add("highlighted");
