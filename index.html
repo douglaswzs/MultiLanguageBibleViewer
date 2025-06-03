@@ -10,14 +10,19 @@
     table { width: 100%; border-collapse: collapse; }
     th, td { border: 1px solid #ccc; padding: 8px; vertical-align: top; }
     .header { font-weight: bold; text-align: center; background-color: #f0f0f0; }
-    .jyutping { color: #888; font-size: 0.9em; }
-    .pinyin  { color: #66a; font-size: 0.9em; }
-    .highlighted { background-color: #ffff7a; }
-
+    .jyutping { color: #b30000; font-size: 0.9em; }
+    .pinyin  { color: #0035ff; font-size: 0.9em; }
+    .highlighted { background-color: #ffffd8; }
+	.horizontal-layout thead, .horizontal-layout tbody, .horizontal-layout th, .horizontal-layout td, .horizontal-layout tr { display: block; }
+	.horizontal-layout th { position: sticky; top: 0; background-color: #f0f0f0; }
+	.horizontal-layout td { margin-bottom: 10px; border: none; border-bottom: 1px solid #ccc; }
     @media (max-width: 768px) {
       table, thead, tbody, th, td, tr { display: block; }
       th { position: sticky; top: 0; background-color: #f0f0f0; }
       td { margin-bottom: 10px; border: none; border-bottom: 1px solid #ccc; }
+	  #toggleLayout {
+		display: none;
+	}
     }
   </style>
 </head>
@@ -38,6 +43,7 @@
   <select id="chapterSelect"></select>
 
   <button id="togglePronunciation">Toggle: Jyutping</button>
+  <button id="toggleLayout">Toggle: Side-by-Side</button>
 	<br />
   <label for="verseJump">Jump to (e.g., John 3:16 or 3:16):</label>
   <input type="text" id="verseJump" placeholder="book chapter:verse or chapter:verse" />
@@ -148,7 +154,8 @@ function applyQueryParams() {
 
       try {
         if (!bibleCache[langKey]) {
-          const res = await fetch(`https://raw.githubusercontent.com/thiagobodruk/bible/master/json/${langKey}.json`);
+          // const res = await fetch(`https://raw.githubusercontent.com/thiagobodruk/bible/master/json/${langKey}.json`);
+		  const res = await fetch(`./json/${langKey}.json`);
           bibleCache[langKey] = await res.json();
         }
         const bible = bibleCache[langKey];
@@ -353,6 +360,34 @@ function applyQueryParams() {
   }
 
   document.getElementById("jumpBtn").addEventListener("click", jumpToVerse);
+
+
+
+
+
+const layoutToggleBtn = document.getElementById("toggleLayout");
+let isHorizontal = localStorage.getItem("layoutMode") === "horizontal";
+
+function updateLayoutToggle() {
+  const table = document.getElementById("bibleTable");
+  if (isHorizontal) {
+    table.classList.add("horizontal-layout");
+    layoutToggleBtn.textContent = "Toggle: Horizontal";
+  } else {
+    table.classList.remove("horizontal-layout");
+    layoutToggleBtn.textContent = "Toggle: Side-by-Side";
+  }
+}
+
+layoutToggleBtn.addEventListener("click", () => {
+  isHorizontal = !isHorizontal;
+  localStorage.setItem("layoutMode", isHorizontal ? "horizontal" : "side");
+  updateLayoutToggle();
+});
+
+updateLayoutToggle();
+
+
 
   // ---------- INIT ----------
 
