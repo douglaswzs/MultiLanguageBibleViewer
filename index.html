@@ -16,6 +16,44 @@
 	.horizontal-layout thead, .horizontal-layout tbody, .horizontal-layout th, .horizontal-layout td, .horizontal-layout tr { display: block; }
 	.horizontal-layout th { position: sticky; top: 0; background-color: #f0f0f0; }
 	.horizontal-layout td { margin-bottom: 10px; border: none; border-bottom: 1px solid #ccc; }
+	.top-controls {
+	  position: absolute;
+	  top: 20px;
+	  right: 20px;
+	  display: flex;
+	  gap: 10px;
+	}
+.popup {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  background: white;
+  color: black;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+  z-index: 1001;
+  display: none;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+.popup h3 {
+  margin-top: 0;
+}
+
+.popup-content label {
+  display: block;
+  margin: 8px 0;
+}
+
+.popup button {
+  margin-top: 10px;
+}
+
+.popup.show {
+  display: block;
+}
+
     @media (max-width: 768px) {
       table, thead, tbody, th, td, tr { display: block; }
       th { position: sticky; top: 0; background-color: #f0f0f0; }
@@ -28,7 +66,9 @@
 </head>
 <body>
   <h1>Multi-Language Bible Viewer</h1>
-
+    <div class="top-controls">
+      <button id="filterToggle" class="theme-toggle">☰ Settings</button>
+    </div>
   <label>Select up to 3 languages:</label><br />
   <select id="lang1"><option value="">--Select Language--</option></select>
   <select id="lang2"><option value="">--Select Language--</option></select>
@@ -55,7 +95,13 @@
 	<thead id="bibleHeader"></thead>
     <tbody id="bibleBody"></tbody>
   </table>
-
+  <div id="categoryFilterPopup" class="popup">
+    <div class="popup-content">
+      <h3>Settings</h3>
+        <button id="ttsToggle" class="theme-toggle">🔇 TTS</button>
+        <button id="soundToggle" class="theme-toggle">🔊 Sound</button>
+    </div>
+  </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pinyin-pro/3.26.0/index.min.js"></script>
   <script type="module">
   import toJyutping from 'https://unpkg.com/to-jyutping@3.1.1?module';
@@ -106,7 +152,7 @@
     book.chapters.forEach((_, idx) => {
       const opt = document.createElement("option");
       opt.value = idx;
-      opt.textContent = `Chapter ${idx + 1}`;
+      opt.textContent = Chapter ${idx + 1};
       chapterSelect.appendChild(opt);
     });
   }
@@ -135,7 +181,7 @@ function applyQueryParams() {
   // Defer jump to verse until after data loads
   if (verse) {
     setTimeout(() => {
-      document.getElementById("verseJump").value = `${chapter}:${verse}`;
+      document.getElementById("verseJump").value = ${chapter}:${verse};
       jumpToVerse();
     }, 1000);
   }
@@ -154,8 +200,8 @@ function applyQueryParams() {
 
       try {
         if (!bibleCache[langKey]) {
-          // const res = await fetch(`https://raw.githubusercontent.com/thiagobodruk/bible/master/json/${langKey}.json`);
-		  const res = await fetch(`./json/${langKey}.json`);
+          const res = await fetch(https://raw.githubusercontent.com/thiagobodruk/bible/master/json/${langKey}.json);
+		  // const res = await fetch(./json/${langKey}.json);
           bibleCache[langKey] = await res.json();
         }
         const bible = bibleCache[langKey];
@@ -184,7 +230,7 @@ function applyQueryParams() {
 		headerRow.appendChild(th);
         booksForRender.push({ ...book, langKey });
       } catch (err) {
-        console.error(`Error loading ${langKey}:`, err);
+        console.error(Error loading ${langKey}:, err);
         booksForRender.push(null);
       }
     }
@@ -202,14 +248,14 @@ function applyQueryParams() {
 
     for (let v = 0; v < maxVerses; v++) {
       const tr = document.createElement("tr");
-      tr.setAttribute("data-chapter-verse", `${chapIdx + 1}:${v + 1}`);
-	  tr.setAttribute("data-verse", `${v + 1}`);
+      tr.setAttribute("data-chapter-verse", ${chapIdx + 1}:${v + 1});
+	  tr.setAttribute("data-verse", ${v + 1});
       books.forEach(book => {
 		if (!book) return; // skip rendering empty column
         const td = document.createElement("td");
         if (book && book.chapters[chapIdx][v]) {
           const verse = book.chapters[chapIdx][v];
-          const verseTxt = `${v + 1}: ${verse}`;
+          const verseTxt = ${v + 1}: ${verse};
           td.appendChild(Object.assign(document.createElement("div"), { textContent: verseTxt }));
 
           if (book.langKey === "zh_cuv" || book.langKey === "zh_ncv") {
@@ -225,7 +271,8 @@ function applyQueryParams() {
 
             if (showP && window.pinyinPro && window.pinyinPro.pinyin) {
               const py = document.createElement("div");
-              py.textContent = window.pinyinPro.pinyin(verse, { toneType: 'num' });
+              // py.textContent = window.pinyinPro.pinyin(verse, { toneType: 'num' });
+			  py.textContent = window.pinyinPro.pinyin(verse);
               py.className = "pinyin";
               td.appendChild(py);
             }
@@ -247,7 +294,7 @@ function applyQueryParams() {
 	});
 	const storedVerse = localStorage.getItem("selectedChapterVerse");
 	if (storedVerse) {
-	  const previouslySelected = document.querySelector(`tr[data-chapter-verse='${storedVerse}']`);
+	  const previouslySelected = document.querySelector(tr[data-chapter-verse='${storedVerse}']);
 	  if (previouslySelected) {
 		previouslySelected.classList.add("highlighted");
 	  }
@@ -314,9 +361,9 @@ function applyQueryParams() {
       onBookOrChapterChange();
 
       setTimeout(() => {
-        const target = `${chapter + 1}:${verse}`;
+        const target = ${chapter + 1}:${verse};
         document.querySelectorAll(".highlighted").forEach(el => el.classList.remove("highlighted"));
-        const row = document.querySelector(`tr[data-chapter-verse='${target}']`);
+        const row = document.querySelector(tr[data-chapter-verse='${target}']);
         if (row) {
           row.scrollIntoView({ behavior: "smooth", block: "start" });
           row.classList.add("highlighted");
@@ -331,9 +378,9 @@ function applyQueryParams() {
       onBookOrChapterChange();
 
       setTimeout(() => {
-        const target = `${chapter + 1}:${verse}`;
+        const target = ${chapter + 1}:${verse};
         document.querySelectorAll(".highlighted").forEach(el => el.classList.remove("highlighted"));
-        const row = document.querySelector(`tr[data-chapter-verse='${target}']`);
+        const row = document.querySelector(tr[data-chapter-verse='${target}']);
         if (row) {
           row.scrollIntoView({ behavior: "smooth", block: "start" });
           row.classList.add("highlighted");
@@ -386,9 +433,16 @@ layoutToggleBtn.addEventListener("click", () => {
 });
 
 updateLayoutToggle();
-
-
-
+const filterToggle = document.getElementById("filterToggle");
+const filterPopup = document.getElementById("categoryFilterPopup");
+  filterToggle?.addEventListener("click", () => {
+    filterPopup?.classList.toggle("show");
+  });
+    document?.addEventListener("click", (e) => {
+    if (!filterPopup?.contains(e.target) && !filterToggle?.contains(e.target)) {
+      filterPopup?.classList.remove("show");
+    }
+  });
   // ---------- INIT ----------
 
   populateSelectors();
