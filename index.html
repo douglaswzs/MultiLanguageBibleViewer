@@ -172,13 +172,13 @@
       <button id="filterToggle" class="theme-toggle">☰ Settings</button>
     </div>
     <label>Select up to 3 languages:</label><br />
-    <select id="lang1">
+    <select id="lang1Select">
       <option value="">--Select Language--</option>
     </select>
-    <select id="lang2">
+    <select id="lang2Select">
       <option value="">--Select Language--</option>
     </select>
-    <select id="lang3">
+    <select id="lang3Select">
       <option value="">--Select Language--</option>
     </select>
     <button id="copyPermalink">Copy Permalink</button>
@@ -225,7 +225,7 @@
         "vi_vietnamese": "Tiếng Việt"
       };
 
-      const selects = ["lang1", "lang2", "lang3"];
+      const selects = ["lang1Select", "lang2Select", "lang3Select"];
       const bibleCache = {};
       let pronunciationMode = localStorage.getItem("pronunciationMode") || 'both';
       let isHorizontal = localStorage.getItem("layoutMode") === "horizontal";
@@ -237,8 +237,16 @@
       // =======================
       // DOM Elements
       // =======================
+      
+      const bibleHeader = document.getElementById("bibleHeader");
+      const bibleBody = document.getElementById("bibleBody");
+      const bibleTable = document.getElementById("bibleTable");
+      const lang1Select = document.getElementById("lang1Select");
+      const lang2Select = document.getElementById("lang2Select");
+      const lang3Select = document.getElementById("lang3Select");
       const themeToggle = document.getElementById("themeToggle");
       const toggleButton = document.getElementById("togglePronunciation");
+      const verseJump = document.getElementById("verseJump");
       const jumpBtn = document.getElementById("jumpBtn");
       const layoutToggleBtn = document.getElementById("toggleLayout");
       const copyPermalink = document.getElementById("copyPermalink");
@@ -268,7 +276,6 @@
       }
 
       function populateBookSelect(books) {
-        const bookSelect = document.getElementById("bookSelect");
         bookSelect.innerHTML = "";
         books.forEach(book => {
           const opt = document.createElement("option");
@@ -279,7 +286,6 @@
       }
 
       function populateChapterSelect(book) {
-        const chapterSelect = document.getElementById("chapterSelect");
         chapterSelect.innerHTML = "";
         book.chapters.forEach((_, idx) => {
           const opt = document.createElement("option");
@@ -304,9 +310,9 @@
       function applyQueryParams() {
         const { lang1, lang2, lang3, book, chapter, verse } = getQueryParams();
 
-        if (lang1) document.getElementById('lang1').value = lang1;
-        if (lang2) document.getElementById('lang2').value = lang2;
-        if (lang3) document.getElementById('lang3').value = lang3;
+        if (lang1) lang1Select.value = lang1;
+        if (lang2) lang2Select.value = lang2;
+        if (lang3) lang3Select.value = lang3;
 
         if (book) localStorage.setItem("bookSelect", book);
         if (chapter) localStorage.setItem("chapterSelect", parseInt(chapter) - 1);
@@ -314,14 +320,14 @@
         // Defer jump to verse until after data loads
         if (verse) {
           setTimeout(() => {
-            document.getElementById("verseJump").value = `${chapter}:${verse}`;
+            verseJump.value = `${chapter}:${verse}`;
             jumpToVerse();
           }, 1000);
         }
       }
 
       async function loadBibleData() {
-        document.getElementById("bibleHeader").innerHTML = "";
+        bibleHeader.innerHTML = "";
         const headerRow = document.createElement("tr");
 
         let firstBibleData = null;
@@ -345,18 +351,18 @@
 
               const urlBook = getQueryParams().book;
               const savedBook = urlBook || localStorage.getItem("bookSelect") || firstBibleData[0].abbrev;
-              document.getElementById("bookSelect").value = savedBook;
+              bookSelect.value = savedBook;
 
               const selectedBook = bible.find(b => b.abbrev === savedBook);
               if (selectedBook) {
                 populateChapterSelect(selectedBook);
                 const urlChap = getQueryParams().chapter;
                 const savedChapter = urlChap ? parseInt(urlChap) - 1 : (parseInt(localStorage.getItem("chapterSelect")) || 0);
-                document.getElementById("chapterSelect").value = savedChapter;
+                chapterSelect.value = savedChapter;
               }
             }
 
-            const selectedBook = document.getElementById("bookSelect").value || firstBibleData[0].abbrev;
+            const selectedBook = bookSelect.value || firstBibleData[0].abbrev;
             const book = bible.find(b => b.abbrev === selectedBook);
             const th = document.createElement("th");
             th.textContent = availableBibles[langKey];
@@ -367,15 +373,15 @@
             booksForRender.push(null);
           }
         }
-        document.getElementById("bibleHeader").appendChild(headerRow);
+        bibleHeader.appendChild(headerRow);
         renderChapter(booksForRender);
         checkZhLangSelected();
       }
 
       function renderChapter(books) {
-        const chapIdx = parseInt(document.getElementById("chapterSelect").value) || 0;
-        const tbody = document.getElementById("bibleBody");
-        tbody.innerHTML = "";
+        const chapIdx = parseInt(chapterSelect.value) || 0;
+        const bibleBody = document.getElementById("bibleBody");
+        bibleBody.innerHTML = "";
 
         const maxVerses = Math.max(...books.map(b => b?.chapters[chapIdx]?.length || 0));
 
@@ -413,7 +419,7 @@
             }
             tr.appendChild(td);
           });
-          tbody.appendChild(tr);
+          bibleBody.appendChild(tr);
         }
         document.querySelectorAll("#bibleBody tr").forEach(tr => {
           tr.addEventListener("click", () => {
@@ -436,7 +442,7 @@
       }
 
       function onBookOrChapterChange() {
-        const bookAbbrev = document.getElementById("bookSelect").value;
+        const bookAbbrev = bookSelect.value;
         localStorage.setItem("bookSelect", bookAbbrev);
 
         const books = selects.map(id => {
@@ -469,7 +475,7 @@
       }
 
       function jumpToVerse() {
-        const val = document.getElementById("verseJump").value.trim();
+        const val = verseJump.value.trim();
         const matchFull = val.match(/^(\w+)\s+(\d+):(\d+)$/i); // book chapter:verse
         const matchPartial = val.match(/^(\d+):(\d+)$/);         // chapter:verse
         const matchChapterOnly = val.match(/^(\w+)\s+(\d+)$/i); // book chapter
@@ -479,16 +485,16 @@
           const chapter = parseInt(matchFull[2]) - 1;
           const verse = parseInt(matchFull[3]);
 
-          const langKey = document.getElementById("lang1").value;
+          const langKey = lang1Select.value;
           if (!langKey || !bibleCache[langKey]) return;
           const bible = bibleCache[langKey];
           const book = bible.find(b => b.name.toLowerCase() === bookName || b.abbrev.toLowerCase() === bookName);
 
           if (!book) return;
-          document.getElementById("bookSelect").value = book.abbrev;
+          bookSelect.value = book.abbrev;
           localStorage.setItem("bookSelect", book.abbrev);
           populateChapterSelect(book);
-          document.getElementById("chapterSelect").value = chapter;
+          chapterSelect.value = chapter;
           localStorage.setItem("chapterSelect", chapter);
           onBookOrChapterChange();
 
@@ -505,7 +511,7 @@
         } else if (matchPartial) {
           const chapter = parseInt(matchPartial[1]) - 1;
           const verse = parseInt(matchPartial[2]);
-          document.getElementById("chapterSelect").value = chapter;
+          chapterSelect.value = chapter;
           localStorage.setItem("chapterSelect", chapter);
           onBookOrChapterChange();
 
@@ -523,38 +529,38 @@
           const bookName = matchChapterOnly[1].toLowerCase();
           const chapter = parseInt(matchChapterOnly[2]) - 1;
 
-          const langKey = document.getElementById("lang1").value;
+          const langKey = lang1Select.value;
           if (!langKey || !bibleCache[langKey]) return;
           const bible = bibleCache[langKey];
           const book = bible.find(b => b.name.toLowerCase() === bookName || b.abbrev.toLowerCase() === bookName);
 
           if (!book) return;
-          document.getElementById("bookSelect").value = book.abbrev;
+          bookSelect.value = book.abbrev;
           localStorage.setItem("bookSelect", book.abbrev);
           populateChapterSelect(book);
-          document.getElementById("chapterSelect").value = chapter;
+          chapterSelect.value = chapter;
           localStorage.setItem("chapterSelect", chapter);
           onBookOrChapterChange();
         }
       }
 
       function bookSelectOnChange() {
-        const value = document.getElementById("bookSelect").value;
+        const value = bookSelect.value;
         localStorage.setItem("bookSelect", value);
 
-        const langKey = document.getElementById("lang1").value;
+        const langKey = lang1Select.value;
         if (!langKey || !bibleCache[langKey]) return;
         const book = bibleCache[langKey].find(b => b.abbrev === value);
         if (book) {
           populateChapterSelect(book);
-          document.getElementById("chapterSelect").value = 0;
+          chapterSelect.value = 0;
           localStorage.setItem("chapterSelect", 0);
           onBookOrChapterChange();
         }
       }
 
       function chapterOnChange() {
-        const value = document.getElementById("chapterSelect").value;
+        const value = chapterSelect.value;
         localStorage.setItem("chapterSelect", value);
         onBookOrChapterChange();
       }
@@ -571,11 +577,11 @@
         onBookOrChapterChange();
       }
       function copyPermalinkOnClick() {
-        const lang1 = document.getElementById("lang1").value;
-        const lang2 = document.getElementById("lang2").value;
-        const lang3 = document.getElementById("lang3").value;
-        const book = document.getElementById("bookSelect").value;
-        const chapter = parseInt(document.getElementById("chapterSelect").value) + 1;
+        const lang1 = lang1Select.value;
+        const lang2 = lang2Select.value;
+        const lang3 = lang3Select.value;
+        const book = bookSelect.value;
+        const chapter = parseInt(chapterSelect.value) + 1;
         const verse = localStorage.getItem("selectedVerse")
 
         const url = new URL(window.location.href);
@@ -591,12 +597,11 @@
           .catch(err => console.error("Copy failed", err));
       }
       function updateLayoutToggle() {
-        const table = document.getElementById("bibleTable");
         if (isHorizontal) {
-          table.classList.add("horizontal-layout");
+          bibleTable.classList.add("horizontal-layout");
           layoutToggleBtn.textContent = "Toggle: Horizontal";
         } else {
-          table.classList.remove("horizontal-layout");
+          bibleTable.classList.remove("horizontal-layout");
           layoutToggleBtn.textContent = "Toggle: Side-by-Side";
         }
       }
