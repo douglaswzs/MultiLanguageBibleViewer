@@ -1,524 +1,657 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Multi-Language Bible Viewer</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    select, input, button { margin: 10px; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { border: 1px solid #ccc; padding: 8px; vertical-align: top; }
-    .header { font-weight: bold; text-align: center; background-color: #f0f0f0; }
-    .jyutping { color: #b30000; font-size: 0.9em; }
-    .pinyin  { color: #0035ff; font-size: 0.9em; }
-    .highlighted { background-color: #ffffd8; }
-	.horizontal-layout thead, .horizontal-layout tbody, .horizontal-layout th, .horizontal-layout td, .horizontal-layout tr { display: block; }
-	.horizontal-layout th { position: sticky; top: 0; background-color: #f0f0f0; }
-	.horizontal-layout td { margin-bottom: 10px; border: none; border-bottom: 1px solid #ccc; }
-	.top-controls {
-	  position: absolute;
-	  top: 20px;
-	  right: 20px;
-	  display: flex;
-	  gap: 10px;
-	}
-.popup {
-  position: fixed;
-  top: 80px;
-  right: 20px;
-  background: white;
-  color: black;
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.25);
-  z-index: 1001;
-  display: none;
-  max-height: 70vh;
-  overflow-y: auto;
-}
-.popup h3 {
-  margin-top: 0;
-}
+    :root {
+      --bg: #ffffff;
+      --text: #000000;
+      --accent: #f9f9f9;
+    }
 
-.popup-content label {
-  display: block;
-  margin: 8px 0;
-}
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: var(--bg);
+      color: var(--text);
+    }
 
-.popup button {
-  margin-top: 10px;
-}
+    body.dark-mode {
+      --bg: #1e1e1e;
+      --text: #e0e0e0;
+      --accent: #2c2c2c;
+    }
 
-.popup.show {
-  display: block;
-}
+    select,
+    input,
+    button {
+      margin: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      vertical-align: top;
+    }
+
+    tr:nth-child(even) {
+      background-color: var(--accent);
+    }
+
+    .header {
+      font-weight: bold;
+      text-align: center;
+      background-color: #f0f0f0;
+    }
+
+    .jyutping {
+      color: #b30000;
+      font-size: 0.9em;
+    }
+
+    .pinyin {
+      color: #0035ff;
+      font-size: 0.9em;
+    }
+
+    .highlighted {
+      background-color: #ffffd8 !important;
+    }
+
+    .horizontal-layout thead,
+    .horizontal-layout tbody,
+    .horizontal-layout th,
+    .horizontal-layout td,
+    .horizontal-layout tr {
+      display: block;
+    }
+
+    .horizontal-layout th {
+      position: sticky;
+      top: 0;
+      background-color: #f0f0f0;
+    }
+
+    .horizontal-layout td {
+      margin-bottom: 10px;
+      border: none;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .top-controls {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .section {
+      background-color: white;
+      padding: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1.5rem;
+    }
+
+    .popup {
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      background: white;
+      color: black;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+      z-index: 1001;
+      display: none;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    .popup h3 {
+      margin-top: 0;
+    }
+
+    .popup-content label {
+      display: block;
+      margin: 8px 0;
+    }
+
+    .popup button {
+      margin-top: 10px;
+    }
+
+    .popup.show {
+      display: block;
+    }
 
     @media (max-width: 768px) {
-      table, thead, tbody, th, td, tr { display: block; }
-      th { position: sticky; top: 0; background-color: #f0f0f0; }
-      td { margin-bottom: 10px; border: none; border-bottom: 1px solid #ccc; }
-	  #toggleLayout {
-		display: none;
-	}
+
+      table,
+      thead,
+      tbody,
+      th,
+      td,
+      tr {
+        display: block;
+      }
+
+      th {
+        position: sticky;
+        top: 0;
+        background-color: #f0f0f0;
+      }
+
+      td {
+        margin-bottom: 10px;
+        border: none;
+        border-bottom: 1px solid #ccc;
+      }
+
+      #toggleLayout {
+        display: none;
+      }
     }
   </style>
 </head>
+
 <body>
-  <h1>Multi-Language Bible Viewer</h1>
+  <div class="section">
+    <h1>Multi-Language Bible Viewer</h1>
     <div class="top-controls">
       <button id="filterToggle" class="theme-toggle">☰ Settings</button>
     </div>
-  <label>Select up to 3 languages:</label><br />
-  <select id="lang1"><option value="">--Select Language--</option></select>
-  <select id="lang2"><option value="">--Select Language--</option></select>
-  <select id="lang3"><option value="">--Select Language--</option></select>
-	<button id="copyPermalink">Copy Permalink</button>
-  <br />
+    <label>Select up to 3 languages:</label><br />
+    <select id="lang1">
+      <option value="">--Select Language--</option>
+    </select>
+    <select id="lang2">
+      <option value="">--Select Language--</option>
+    </select>
+    <select id="lang3">
+      <option value="">--Select Language--</option>
+    </select>
+    <button id="copyPermalink">Copy Permalink</button>
+    <br />
 
-  <label for="bookSelect">Book:</label>
-  <select id="bookSelect"></select>
+    <label for="bookSelect">Book:</label>
+    <select id="bookSelect"></select>
 
-  <label for="chapterSelect">Chapter:</label>
-  <select id="chapterSelect"></select>
+    <label for="chapterSelect">Chapter:</label>
+    <select id="chapterSelect"></select>
 
-  <button id="togglePronunciation">Toggle: Jyutping</button>
-  <button id="toggleLayout">Toggle: Side-by-Side</button>
-	<br />
-  <label for="verseJump">Jump to (e.g., John 3:16 or 3:16):</label>
-  <input type="text" id="verseJump" placeholder="book chapter:verse or chapter:verse" />
-  <button id="jumpBtn">Go</button>
-
-  <br /><br />
-
+    <button id="togglePronunciation">Toggle: Jyutping</button>
+    <button id="toggleLayout">Toggle: Side-by-Side</button>
+    <br />
+    <label for="verseJump">Jump to (e.g., John 3:16 or 3:16):</label>
+    <input type="text" id="verseJump" placeholder="book chapter:verse or chapter:verse" />
+    <button id="jumpBtn">Go</button>
+  </div>
   <table id="bibleTable">
-	<thead id="bibleHeader"></thead>
+    <thead id="bibleHeader"></thead>
     <tbody id="bibleBody"></tbody>
   </table>
+  </div>
   <div id="categoryFilterPopup" class="popup">
     <div class="popup-content">
       <h3>Settings</h3>
-        <button id="ttsToggle" class="theme-toggle">🔇 TTS</button>
-        <button id="soundToggle" class="theme-toggle">🔊 Sound</button>
+      <button id="themeToggle" class="theme-toggle">🌙</button>
+      <button id="ttsToggle" class="theme-toggle">🔇 TTS</button>
+      <button id="soundToggle" class="theme-toggle">🔊 Sound</button>
     </div>
-  </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pinyin-pro/3.26.0/index.min.js"></script>
-  <script type="module">
-  import toJyutping from 'https://unpkg.com/to-jyutping@3.1.1?module';
 
-  const availableBibles = {
-    "ar_svd": "Arabic", "zh_cuv": "Chinese Union Version", "zh_ncv": "New Chinese Version",
-    "de_schlachter": "German", "el_greek": "Modern Greek", "en_bbe": "Basic English",
-    "en_kjv": "King James Version", "eo_esperanto": "Esperanto", "es_rvr": "Reina Valera",
-    "fi_finnish": "Finnish Bible", "fi_pr": "Pyhä Raamattu", "fr_apee": "Le Bible de l'Épée",
-    "ko_ko": "Korean Version", "pt_aa": "Almeida Revisada Imprensa Bíblica",
-    "pt_acf": "Almeida Corrigida e Revisada Fiel", "pt_nvi": "Nova Versão Internacional",
-    "ro_cornilescu": "Versiunea Dumitru Cornilescu", "ru_synodal": "Синодальный перевод",
-    "vi_vietnamese": "Tiếng Việt"
-  };
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pinyin-pro/3.26.0/index.min.js"></script>
+    <script type="module">
+      import toJyutping from 'https://unpkg.com/to-jyutping@3.1.1?module';
 
-  const selects = ["lang1", "lang2", "lang3"];
-  const bibleCache = {};
-  let pronunciationMode = localStorage.getItem("pronunciationMode") || 'both';
+      const availableBibles = {
+        "ar_svd": "Arabic", "zh_cuv": "Chinese Union Version", "zh_ncv": "New Chinese Version",
+        "de_schlachter": "German", "el_greek": "Modern Greek", "en_bbe": "Basic English",
+        "en_kjv": "King James Version", "eo_esperanto": "Esperanto", "es_rvr": "Reina Valera",
+        "fi_finnish": "Finnish Bible", "fi_pr": "Pyhä Raamattu", "fr_apee": "Le Bible de l'Épée",
+        "ko_ko": "Korean Version", "pt_aa": "Almeida Revisada Imprensa Bíblica",
+        "pt_acf": "Almeida Corrigida e Revisada Fiel", "pt_nvi": "Nova Versão Internacional",
+        "ro_cornilescu": "Versiunea Dumitru Cornilescu", "ru_synodal": "Синодальный перевод",
+        "vi_vietnamese": "Tiếng Việt"
+      };
 
-  const toggleButton = document.getElementById("togglePronunciation");
+      const selects = ["lang1", "lang2", "lang3"];
+      const bibleCache = {};
+      let pronunciationMode = localStorage.getItem("pronunciationMode") || 'both';
+      let isHorizontal = localStorage.getItem("layoutMode") === "horizontal";
+      // =======================
+      // Global State
+      // =======================
 
-  function populateSelectors() {
-    selects.forEach(id => {
-      const select = document.getElementById(id);
-      for (const key in availableBibles) {
-        const opt = document.createElement("option");
-        opt.value = key;
-        opt.textContent = availableBibles[key];
-        select.appendChild(opt);
-      }
-    });
-  }
 
-  function populateBookSelect(books) {
-    const bookSelect = document.getElementById("bookSelect");
-    bookSelect.innerHTML = "";
-    books.forEach(book => {
-      const opt = document.createElement("option");
-      opt.value = book.abbrev;
-      opt.textContent = book.name;
-      bookSelect.appendChild(opt);
-    });
-  }
+      // =======================
+      // DOM Elements
+      // =======================
+      const themeToggle = document.getElementById("themeToggle");
+      const toggleButton = document.getElementById("togglePronunciation");
+      const jumpBtn = document.getElementById("jumpBtn");
+      const layoutToggleBtn = document.getElementById("toggleLayout");
+      const copyPermalink = document.getElementById("copyPermalink");
+      const chapterSelect = document.getElementById("chapterSelect");
+      const bookSelect = document.getElementById("bookSelect");
+      const filterToggle = document.getElementById("filterToggle");
+      const filterPopup = document.getElementById("categoryFilterPopup");
 
-  function populateChapterSelect(book) {
-    const chapterSelect = document.getElementById("chapterSelect");
-    chapterSelect.innerHTML = "";
-    book.chapters.forEach((_, idx) => {
-      const opt = document.createElement("option");
-      opt.value = idx;
-      opt.textContent = `Chapter ${idx + 1}`;
-      chapterSelect.appendChild(opt);
-    });
-  }
-function getQueryParams() {
-  const urlParams = new URLSearchParams(window.location.search);
-  return {
-    lang1: urlParams.get('lang1'),
-    lang2: urlParams.get('lang2'),
-    lang3: urlParams.get('lang3'),
-    book: urlParams.get('book'),
-    chapter: urlParams.get('chapter'),
-    verse: urlParams.get('verse')
-  };
-}
+      // =======================
+      // Labels & Cycles
+      // =======================
 
-function applyQueryParams() {
-  const { lang1, lang2, lang3, book, chapter, verse } = getQueryParams();
 
-  if (lang1) document.getElementById('lang1').value = lang1;
-  if (lang2) document.getElementById('lang2').value = lang2;
-  if (lang3) document.getElementById('lang3').value = lang3;
-
-  if (book) localStorage.setItem("bookSelect", book);
-  if (chapter) localStorage.setItem("chapterSelect", parseInt(chapter) - 1);
-  
-  // Defer jump to verse until after data loads
-  if (verse) {
-    setTimeout(() => {
-      document.getElementById("verseJump").value = `${chapter}:${verse}`;
-      jumpToVerse();
-    }, 1000);
-  }
-}
-
-  async function loadBibleData() {
-	document.getElementById("bibleHeader").innerHTML = "";
-	const headerRow = document.createElement("tr");
-
-    let firstBibleData = null;
-    const booksForRender = [];
-
-    for (let i = 0; i < selects.length; i++) {
-      const langKey = document.getElementById(selects[i]).value;
-      if (!langKey) { booksForRender.push(null); continue; }
-
-      try {
-        if (!bibleCache[langKey]) {
-          // const res = await fetch(`https://raw.githubusercontent.com/thiagobodruk/bible/master/json/${langKey}.json`);
-		  const res = await fetch(`./json/${langKey}.json`);
-          bibleCache[langKey] = await res.json();
-        }
-        const bible = bibleCache[langKey];
-
-        if (!firstBibleData) {
-          firstBibleData = bible;
-          populateBookSelect(firstBibleData);
-
-          const urlBook = getQueryParams().book;
-		  const savedBook = urlBook || localStorage.getItem("bookSelect") || firstBibleData[0].abbrev;
-          document.getElementById("bookSelect").value = savedBook;
-
-          const selectedBook = bible.find(b => b.abbrev === savedBook);
-          if (selectedBook) {
-            populateChapterSelect(selectedBook);
-            const urlChap = getQueryParams().chapter;
-			const savedChapter = urlChap ? parseInt(urlChap) - 1 : (parseInt(localStorage.getItem("chapterSelect")) || 0);
-            document.getElementById("chapterSelect").value = savedChapter;
+      // =======================
+      // Utility Functions
+      // =======================
+      function populateSelectors() {
+        selects.forEach(id => {
+          const select = document.getElementById(id);
+          for (const key in availableBibles) {
+            const opt = document.createElement("option");
+            opt.value = key;
+            opt.textContent = availableBibles[key];
+            select.appendChild(opt);
           }
-        }
-
-        const selectedBook = document.getElementById("bookSelect").value || firstBibleData[0].abbrev;
-        const book = bible.find(b => b.abbrev === selectedBook);
-        const th = document.createElement("th");
-		th.textContent = availableBibles[langKey];
-		headerRow.appendChild(th);
-        booksForRender.push({ ...book, langKey });
-      } catch (err) {
-        console.error(`Error loading ${langKey}:`, err);
-        booksForRender.push(null);
+        });
       }
-    }
-	document.getElementById("bibleHeader").appendChild(headerRow);
-    renderChapter(booksForRender);
-    checkZhLangSelected();
-  }
 
-  function renderChapter(books) {
-    const chapIdx = parseInt(document.getElementById("chapterSelect").value) || 0;
-    const tbody = document.getElementById("bibleBody");
-    tbody.innerHTML = "";
+      function populateBookSelect(books) {
+        const bookSelect = document.getElementById("bookSelect");
+        bookSelect.innerHTML = "";
+        books.forEach(book => {
+          const opt = document.createElement("option");
+          opt.value = book.abbrev;
+          opt.textContent = book.name;
+          bookSelect.appendChild(opt);
+        });
+      }
 
-    const maxVerses = Math.max(...books.map(b => b?.chapters[chapIdx]?.length || 0));
+      function populateChapterSelect(book) {
+        const chapterSelect = document.getElementById("chapterSelect");
+        chapterSelect.innerHTML = "";
+        book.chapters.forEach((_, idx) => {
+          const opt = document.createElement("option");
+          opt.value = idx;
+          opt.textContent = `Chapter ${idx + 1}`;
+          chapterSelect.appendChild(opt);
+        });
+      }
 
-    for (let v = 0; v < maxVerses; v++) {
-      const tr = document.createElement("tr");
-      tr.setAttribute("data-chapter-verse", `${chapIdx + 1}:${v + 1}`);
-	  tr.setAttribute("data-verse", `${v + 1}`);
-      books.forEach(book => {
-		if (!book) return; // skip rendering empty column
-        const td = document.createElement("td");
-        if (book && book.chapters[chapIdx][v]) {
-          const verse = book.chapters[chapIdx][v];
-          const verseTxt = `${v + 1}: ${verse}`;
-          td.appendChild(Object.assign(document.createElement("div"), { textContent: verseTxt }));
+      function getQueryParams() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return {
+          lang1: urlParams.get('lang1'),
+          lang2: urlParams.get('lang2'),
+          lang3: urlParams.get('lang3'),
+          book: urlParams.get('book'),
+          chapter: urlParams.get('chapter'),
+          verse: urlParams.get('verse')
+        };
+      }
 
-          if (book.langKey === "zh_cuv" || book.langKey === "zh_ncv") {
-            const showJ = pronunciationMode === "jyutping" || pronunciationMode === "both";
-            const showP = pronunciationMode === "pinyin" || pronunciationMode === "both";
+      function applyQueryParams() {
+        const { lang1, lang2, lang3, book, chapter, verse } = getQueryParams();
 
-            if (showJ) {
-              const j = document.createElement("div");
-              j.textContent = toJyutping.getJyutpingText(verse);
-              j.className = "jyutping";
-              td.appendChild(j);
+        if (lang1) document.getElementById('lang1').value = lang1;
+        if (lang2) document.getElementById('lang2').value = lang2;
+        if (lang3) document.getElementById('lang3').value = lang3;
+
+        if (book) localStorage.setItem("bookSelect", book);
+        if (chapter) localStorage.setItem("chapterSelect", parseInt(chapter) - 1);
+
+        // Defer jump to verse until after data loads
+        if (verse) {
+          setTimeout(() => {
+            document.getElementById("verseJump").value = `${chapter}:${verse}`;
+            jumpToVerse();
+          }, 1000);
+        }
+      }
+
+      async function loadBibleData() {
+        document.getElementById("bibleHeader").innerHTML = "";
+        const headerRow = document.createElement("tr");
+
+        let firstBibleData = null;
+        const booksForRender = [];
+
+        for (let i = 0; i < selects.length; i++) {
+          const langKey = document.getElementById(selects[i]).value;
+          if (!langKey) { booksForRender.push(null); continue; }
+
+          try {
+            if (!bibleCache[langKey]) {
+              // const res = await fetch(`https://raw.githubusercontent.com/thiagobodruk/bible/master/json/${langKey}.json`);
+              const res = await fetch(`./json/${langKey}.json`);
+              bibleCache[langKey] = await res.json();
+            }
+            const bible = bibleCache[langKey];
+
+            if (!firstBibleData) {
+              firstBibleData = bible;
+              populateBookSelect(firstBibleData);
+
+              const urlBook = getQueryParams().book;
+              const savedBook = urlBook || localStorage.getItem("bookSelect") || firstBibleData[0].abbrev;
+              document.getElementById("bookSelect").value = savedBook;
+
+              const selectedBook = bible.find(b => b.abbrev === savedBook);
+              if (selectedBook) {
+                populateChapterSelect(selectedBook);
+                const urlChap = getQueryParams().chapter;
+                const savedChapter = urlChap ? parseInt(urlChap) - 1 : (parseInt(localStorage.getItem("chapterSelect")) || 0);
+                document.getElementById("chapterSelect").value = savedChapter;
+              }
             }
 
-            if (showP && window.pinyinPro && window.pinyinPro.pinyin) {
-              const py = document.createElement("div");
-              // py.textContent = window.pinyinPro.pinyin(verse, { toneType: 'num' });
-			  py.textContent = window.pinyinPro.pinyin(verse);
-              py.className = "pinyin";
-              td.appendChild(py);
-            }
+            const selectedBook = document.getElementById("bookSelect").value || firstBibleData[0].abbrev;
+            const book = bible.find(b => b.abbrev === selectedBook);
+            const th = document.createElement("th");
+            th.textContent = availableBibles[langKey];
+            headerRow.appendChild(th);
+            booksForRender.push({ ...book, langKey });
+          } catch (err) {
+            console.error(`Error loading ${langKey}:`, err);
+            booksForRender.push(null);
           }
         }
-        tr.appendChild(td);
+        document.getElementById("bibleHeader").appendChild(headerRow);
+        renderChapter(booksForRender);
+        checkZhLangSelected();
+      }
+
+      function renderChapter(books) {
+        const chapIdx = parseInt(document.getElementById("chapterSelect").value) || 0;
+        const tbody = document.getElementById("bibleBody");
+        tbody.innerHTML = "";
+
+        const maxVerses = Math.max(...books.map(b => b?.chapters[chapIdx]?.length || 0));
+
+        for (let v = 0; v < maxVerses; v++) {
+          const tr = document.createElement("tr");
+          tr.setAttribute("data-chapter-verse", `${chapIdx + 1}:${v + 1}`);
+          tr.setAttribute("data-verse", `${v + 1}`);
+          books.forEach(book => {
+            if (!book) return; // skip rendering empty column
+            const td = document.createElement("td");
+            if (book && book.chapters[chapIdx][v]) {
+              const verse = book.chapters[chapIdx][v];
+              const verseTxt = `${v + 1}: ${verse}`;
+              td.appendChild(Object.assign(document.createElement("div"), { textContent: verseTxt }));
+
+              if (book.langKey === "zh_cuv" || book.langKey === "zh_ncv") {
+                const showJ = pronunciationMode === "jyutping" || pronunciationMode === "both";
+                const showP = pronunciationMode === "pinyin" || pronunciationMode === "both";
+
+                if (showJ) {
+                  const j = document.createElement("div");
+                  j.textContent = toJyutping.getJyutpingText(verse);
+                  j.className = "jyutping";
+                  td.appendChild(j);
+                }
+
+                if (showP && window.pinyinPro && window.pinyinPro.pinyin) {
+                  const py = document.createElement("div");
+                  // py.textContent = window.pinyinPro.pinyin(verse, { toneType: 'num' });
+                  py.textContent = window.pinyinPro.pinyin(verse);
+                  py.className = "pinyin";
+                  td.appendChild(py);
+                }
+              }
+            }
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        }
+        document.querySelectorAll("#bibleBody tr").forEach(tr => {
+          tr.addEventListener("click", () => {
+            const selectedVerse = tr.getAttribute("data-verse");
+            localStorage.setItem("selectedVerse", selectedVerse);
+            const selectedChapterVerse = tr.getAttribute("data-chapter-verse");
+            localStorage.setItem("selectedChapterVerse", selectedChapterVerse);
+
+            document.querySelectorAll(".highlighted").forEach(el => el.classList.remove("highlighted"));
+            tr.classList.add("highlighted");
+          });
+          const storedVerse = localStorage.getItem("selectedChapterVerse");
+          if (storedVerse) {
+            const previouslySelected = document.querySelector(`tr[data-chapter-verse='${storedVerse}']`);
+            if (previouslySelected) {
+              previouslySelected.classList.add("highlighted");
+            }
+          }
+        });
+      }
+
+      function onBookOrChapterChange() {
+        const bookAbbrev = document.getElementById("bookSelect").value;
+        localStorage.setItem("bookSelect", bookAbbrev);
+
+        const books = selects.map(id => {
+          const langKey = document.getElementById(id).value;
+          const book = langKey && bibleCache[langKey]
+            ? bibleCache[langKey].find(b => b.abbrev === bookAbbrev)
+            : null;
+          return book ? { ...book, langKey } : null;
+        });
+
+        renderChapter(books);
+      }
+
+      function checkZhLangSelected() {
+        const show = selects.some(id => {
+          const val = document.getElementById(id).value;
+          return val === "zh_cuv" || val === "zh_ncv";
+        });
+        toggleButton.style.display = show ? "inline" : "none";
+      }
+
+      function updateToggleButtonLabel() {
+        if (pronunciationMode === "jyutping") {
+          toggleButton.textContent = "Toggle: Jyutping";
+        } else if (pronunciationMode === "pinyin") {
+          toggleButton.textContent = "Toggle: Pinyin";
+        } else {
+          toggleButton.textContent = "Toggle: Jyutping + Pinyin";
+        }
+      }
+
+      function jumpToVerse() {
+        const val = document.getElementById("verseJump").value.trim();
+        const matchFull = val.match(/^(\w+)\s+(\d+):(\d+)$/i); // book chapter:verse
+        const matchPartial = val.match(/^(\d+):(\d+)$/);         // chapter:verse
+        const matchChapterOnly = val.match(/^(\w+)\s+(\d+)$/i); // book chapter
+
+        if (matchFull) {
+          const bookName = matchFull[1].toLowerCase();
+          const chapter = parseInt(matchFull[2]) - 1;
+          const verse = parseInt(matchFull[3]);
+
+          const langKey = document.getElementById("lang1").value;
+          if (!langKey || !bibleCache[langKey]) return;
+          const bible = bibleCache[langKey];
+          const book = bible.find(b => b.name.toLowerCase() === bookName || b.abbrev.toLowerCase() === bookName);
+
+          if (!book) return;
+          document.getElementById("bookSelect").value = book.abbrev;
+          localStorage.setItem("bookSelect", book.abbrev);
+          populateChapterSelect(book);
+          document.getElementById("chapterSelect").value = chapter;
+          localStorage.setItem("chapterSelect", chapter);
+          onBookOrChapterChange();
+
+          setTimeout(() => {
+            const target = `${chapter + 1}:${verse}`;
+            document.querySelectorAll(".highlighted").forEach(el => el.classList.remove("highlighted"));
+            const row = document.querySelector(`tr[data-chapter-verse='${target}']`);
+            if (row) {
+              row.scrollIntoView({ behavior: "smooth", block: "start" });
+              row.classList.add("highlighted");
+            }
+          }, 200);
+
+        } else if (matchPartial) {
+          const chapter = parseInt(matchPartial[1]) - 1;
+          const verse = parseInt(matchPartial[2]);
+          document.getElementById("chapterSelect").value = chapter;
+          localStorage.setItem("chapterSelect", chapter);
+          onBookOrChapterChange();
+
+          setTimeout(() => {
+            const target = `${chapter + 1}:${verse}`;
+            document.querySelectorAll(".highlighted").forEach(el => el.classList.remove("highlighted"));
+            const row = document.querySelector(`tr[data-chapter-verse='${target}']`);
+            if (row) {
+              row.scrollIntoView({ behavior: "smooth", block: "start" });
+              row.classList.add("highlighted");
+            }
+          }, 200);
+
+        } else if (matchChapterOnly) {
+          const bookName = matchChapterOnly[1].toLowerCase();
+          const chapter = parseInt(matchChapterOnly[2]) - 1;
+
+          const langKey = document.getElementById("lang1").value;
+          if (!langKey || !bibleCache[langKey]) return;
+          const bible = bibleCache[langKey];
+          const book = bible.find(b => b.name.toLowerCase() === bookName || b.abbrev.toLowerCase() === bookName);
+
+          if (!book) return;
+          document.getElementById("bookSelect").value = book.abbrev;
+          localStorage.setItem("bookSelect", book.abbrev);
+          populateChapterSelect(book);
+          document.getElementById("chapterSelect").value = chapter;
+          localStorage.setItem("chapterSelect", chapter);
+          onBookOrChapterChange();
+        }
+      }
+
+      function bookSelectOnChange() {
+        const value = document.getElementById("bookSelect").value;
+        localStorage.setItem("bookSelect", value);
+
+        const langKey = document.getElementById("lang1").value;
+        if (!langKey || !bibleCache[langKey]) return;
+        const book = bibleCache[langKey].find(b => b.abbrev === value);
+        if (book) {
+          populateChapterSelect(book);
+          document.getElementById("chapterSelect").value = 0;
+          localStorage.setItem("chapterSelect", 0);
+          onBookOrChapterChange();
+        }
+      }
+
+      function chapterOnChange() {
+        const value = document.getElementById("chapterSelect").value;
+        localStorage.setItem("chapterSelect", value);
+        onBookOrChapterChange();
+      }
+      function toggleButtonOnClick() {
+        if (pronunciationMode === "jyutping") {
+          pronunciationMode = "pinyin";
+        } else if (pronunciationMode === "pinyin") {
+          pronunciationMode = "both";
+        } else {
+          pronunciationMode = "jyutping";
+        }
+        localStorage.setItem("pronunciationMode", pronunciationMode);
+        updateToggleButtonLabel();
+        onBookOrChapterChange();
+      }
+      function copyPermalinkOnClick() {
+        const lang1 = document.getElementById("lang1").value;
+        const lang2 = document.getElementById("lang2").value;
+        const lang3 = document.getElementById("lang3").value;
+        const book = document.getElementById("bookSelect").value;
+        const chapter = parseInt(document.getElementById("chapterSelect").value) + 1;
+        const verse = localStorage.getItem("selectedVerse")
+
+        const url = new URL(window.location.href);
+        url.searchParams.set("lang1", lang1);
+        if (lang2) url.searchParams.set("lang2", lang2);
+        if (lang3) url.searchParams.set("lang3", lang3);
+        url.searchParams.set("book", book);
+        url.searchParams.set("chapter", chapter);
+        if (verse) url.searchParams.set("verse", verse);
+
+        navigator.clipboard.writeText(url.toString())
+          .then(() => alert("Link copied to clipboard!"))
+          .catch(err => console.error("Copy failed", err));
+      }
+      function updateLayoutToggle() {
+        const table = document.getElementById("bibleTable");
+        if (isHorizontal) {
+          table.classList.add("horizontal-layout");
+          layoutToggleBtn.textContent = "Toggle: Horizontal";
+        } else {
+          table.classList.remove("horizontal-layout");
+          layoutToggleBtn.textContent = "Toggle: Side-by-Side";
+        }
+      }
+
+      function layoutToggleBtnOnClick() {
+        isHorizontal = !isHorizontal;
+        localStorage.setItem("layoutMode", isHorizontal ? "horizontal" : "side");
+        updateLayoutToggle();
+      }
+
+      function filterToggleOnClick() {
+        filterPopup?.classList.toggle("show");
+      }
+
+      // ---------- INIT ----------
+      updateLayoutToggle();
+      populateSelectors();
+
+      selects.forEach(id => {
+        const saved = localStorage.getItem(id);
+        if (saved) {
+          document.getElementById(id).value = saved;
+        }
       });
-      tbody.appendChild(tr);
-    }
-	document.querySelectorAll("#bibleBody tr").forEach(tr => {
-	  tr.addEventListener("click", () => {
-		const selectedVerse = tr.getAttribute("data-verse");		
-		localStorage.setItem("selectedVerse", selectedVerse);
-		const selectedChapterVerse = tr.getAttribute("data-chapter-verse");
-		localStorage.setItem("selectedChapterVerse", selectedChapterVerse);
 
-		document.querySelectorAll(".highlighted").forEach(el => el.classList.remove("highlighted"));
-		tr.classList.add("highlighted");
-	});
-	const storedVerse = localStorage.getItem("selectedChapterVerse");
-	if (storedVerse) {
-	  const previouslySelected = document.querySelector(`tr[data-chapter-verse='${storedVerse}']`);
-	  if (previouslySelected) {
-		previouslySelected.classList.add("highlighted");
-	  }
-	}
-});
-
-  }
-
-  function onBookOrChapterChange() {
-    const bookAbbrev = document.getElementById("bookSelect").value;
-    localStorage.setItem("bookSelect", bookAbbrev);
-
-    const books = selects.map(id => {
-      const langKey = document.getElementById(id).value;
-      const book = langKey && bibleCache[langKey]
-        ? bibleCache[langKey].find(b => b.abbrev === bookAbbrev)
-        : null;
-      return book ? { ...book, langKey } : null;
-    });
-
-    renderChapter(books);
-  }
-
-  function checkZhLangSelected() {
-    const show = selects.some(id => {
-      const val = document.getElementById(id).value;
-      return val === "zh_cuv" || val === "zh_ncv";
-    });
-    toggleButton.style.display = show ? "inline" : "none";
-  }
-
-  function updateToggleButtonLabel() {
-    if (pronunciationMode === "jyutping") {
-      toggleButton.textContent = "Toggle: Jyutping";
-    } else if (pronunciationMode === "pinyin") {
-      toggleButton.textContent = "Toggle: Pinyin";
-    } else {
-      toggleButton.textContent = "Toggle: Jyutping + Pinyin";
-    }
-  }
-
-  function jumpToVerse() {
-    const val = document.getElementById("verseJump").value.trim();
-    const matchFull = val.match(/^(\w+)\s+(\d+):(\d+)$/i); // book chapter:verse
-    const matchPartial = val.match(/^(\d+):(\d+)$/);         // chapter:verse
-    const matchChapterOnly = val.match(/^(\w+)\s+(\d+)$/i); // book chapter
-
-    if (matchFull) {
-      const bookName = matchFull[1].toLowerCase();
-      const chapter = parseInt(matchFull[2]) - 1;
-      const verse = parseInt(matchFull[3]);
-
-      const langKey = document.getElementById("lang1").value;
-      if (!langKey || !bibleCache[langKey]) return;
-      const bible = bibleCache[langKey];
-      const book = bible.find(b => b.name.toLowerCase() === bookName || b.abbrev.toLowerCase() === bookName);
-
-      if (!book) return;
-      document.getElementById("bookSelect").value = book.abbrev;
-      localStorage.setItem("bookSelect", book.abbrev);
-      populateChapterSelect(book);
-      document.getElementById("chapterSelect").value = chapter;
-      localStorage.setItem("chapterSelect", chapter);
-      onBookOrChapterChange();
-
-      setTimeout(() => {
-        const target = `${chapter + 1}:${verse}`;
-        document.querySelectorAll(".highlighted").forEach(el => el.classList.remove("highlighted"));
-        const row = document.querySelector(`tr[data-chapter-verse='${target}']`);
-        if (row) {
-          row.scrollIntoView({ behavior: "smooth", block: "start" });
-          row.classList.add("highlighted");
-        }
-      }, 200);
-
-    } else if (matchPartial) {
-      const chapter = parseInt(matchPartial[1]) - 1;
-      const verse = parseInt(matchPartial[2]);
-      document.getElementById("chapterSelect").value = chapter;
-      localStorage.setItem("chapterSelect", chapter);
-      onBookOrChapterChange();
-
-      setTimeout(() => {
-        const target = `${chapter + 1}:${verse}`;
-        document.querySelectorAll(".highlighted").forEach(el => el.classList.remove("highlighted"));
-        const row = document.querySelector(`tr[data-chapter-verse='${target}']`);
-        if (row) {
-          row.scrollIntoView({ behavior: "smooth", block: "start" });
-          row.classList.add("highlighted");
-        }
-      }, 200);
-
-    } else if (matchChapterOnly) {
-      const bookName = matchChapterOnly[1].toLowerCase();
-      const chapter = parseInt(matchChapterOnly[2]) - 1;
-
-      const langKey = document.getElementById("lang1").value;
-      if (!langKey || !bibleCache[langKey]) return;
-      const bible = bibleCache[langKey];
-      const book = bible.find(b => b.name.toLowerCase() === bookName || b.abbrev.toLowerCase() === bookName);
-
-      if (!book) return;
-      document.getElementById("bookSelect").value = book.abbrev;
-      localStorage.setItem("bookSelect", book.abbrev);
-      populateChapterSelect(book);
-      document.getElementById("chapterSelect").value = chapter;
-      localStorage.setItem("chapterSelect", chapter);
-      onBookOrChapterChange();
-    }
-  }
-
-  document.getElementById("jumpBtn").addEventListener("click", jumpToVerse);
-
-
-
-
-
-const layoutToggleBtn = document.getElementById("toggleLayout");
-let isHorizontal = localStorage.getItem("layoutMode") === "horizontal";
-
-function updateLayoutToggle() {
-  const table = document.getElementById("bibleTable");
-  if (isHorizontal) {
-    table.classList.add("horizontal-layout");
-    layoutToggleBtn.textContent = "Toggle: Horizontal";
-  } else {
-    table.classList.remove("horizontal-layout");
-    layoutToggleBtn.textContent = "Toggle: Side-by-Side";
-  }
-}
-
-layoutToggleBtn.addEventListener("click", () => {
-  isHorizontal = !isHorizontal;
-  localStorage.setItem("layoutMode", isHorizontal ? "horizontal" : "side");
-  updateLayoutToggle();
-});
-
-updateLayoutToggle();
-const filterToggle = document.getElementById("filterToggle");
-const filterPopup = document.getElementById("categoryFilterPopup");
-  filterToggle?.addEventListener("click", () => {
-    filterPopup?.classList.toggle("show");
-  });
-    document?.addEventListener("click", (e) => {
-    if (!filterPopup?.contains(e.target) && !filterToggle?.contains(e.target)) {
-      filterPopup?.classList.remove("show");
-    }
-  });
-  // ---------- INIT ----------
-
-  populateSelectors();
-
-  selects.forEach(id => {
-    const saved = localStorage.getItem(id);
-    if (saved) {
-      document.getElementById(id).value = saved;
-    }
-  });
-
-  updateToggleButtonLabel();
-  applyQueryParams();
-  loadBibleData();
-
-  selects.forEach(id => {
-    const el = document.getElementById(id);
-    el.addEventListener("change", () => {
-      localStorage.setItem(id, el.value);
+      updateToggleButtonLabel();
+      applyQueryParams();
       loadBibleData();
-    });
-  });
 
-  document.getElementById("bookSelect").addEventListener("change", () => {
-    const value = document.getElementById("bookSelect").value;
-    localStorage.setItem("bookSelect", value);
+      selects.forEach(id => {
+        const el = document.getElementById(id);
+        el.addEventListener("change", () => {
+          localStorage.setItem(id, el.value);
+          loadBibleData();
+        });
+      });
 
-    const langKey = document.getElementById("lang1").value;
-    if (!langKey || !bibleCache[langKey]) return;
-    const book = bibleCache[langKey].find(b => b.abbrev === value);
-    if (book) {
-      populateChapterSelect(book);
-      document.getElementById("chapterSelect").value = 0;
-      localStorage.setItem("chapterSelect", 0);
-      onBookOrChapterChange();
-    }
-  });
 
-  document.getElementById("chapterSelect").addEventListener("change", () => {
-    const value = document.getElementById("chapterSelect").value;
-    localStorage.setItem("chapterSelect", value);
-    onBookOrChapterChange();
-  });
 
-  toggleButton.addEventListener("click", () => {
-    if (pronunciationMode === "jyutping") {
-      pronunciationMode = "pinyin";
-    } else if (pronunciationMode === "pinyin") {
-      pronunciationMode = "both";
-    } else {
-      pronunciationMode = "jyutping";
-    }
-    localStorage.setItem("pronunciationMode", pronunciationMode);
-    updateToggleButtonLabel();
-    onBookOrChapterChange();
-  });
-document.getElementById("copyPermalink").addEventListener("click", () => {
-  const lang1 = document.getElementById("lang1").value;
-  const lang2 = document.getElementById("lang2").value;
-  const lang3 = document.getElementById("lang3").value;
-  const book = document.getElementById("bookSelect").value;
-  const chapter = parseInt(document.getElementById("chapterSelect").value) + 1;
-  const verse = localStorage.getItem("selectedVerse")
-
-  const url = new URL(window.location.href);
-  url.searchParams.set("lang1", lang1);
-  if (lang2) url.searchParams.set("lang2", lang2);
-  if (lang3) url.searchParams.set("lang3", lang3);
-  url.searchParams.set("book", book);
-  url.searchParams.set("chapter", chapter);
-  if (verse) url.searchParams.set("verse", verse);
-
-  navigator.clipboard.writeText(url.toString())
-    .then(() => alert("Link copied to clipboard!"))
-    .catch(err => console.error("Copy failed", err));
-});
-</script>
+      // =======================
+      // Events
+      // =======================
+      bookSelect.addEventListener("change", bookSelectOnChange);
+      chapterSelect.addEventListener("change", chapterOnChange);
+      toggleButton.addEventListener("click", toggleButtonOnClick);
+      copyPermalink.addEventListener("click", copyPermalinkOnClick);
+      jumpBtn.addEventListener("click", jumpToVerse);
+      layoutToggleBtn.addEventListener("click", layoutToggleBtnOnClick);
+      filterToggle?.addEventListener("click", filterToggleOnClick);
+      document?.addEventListener("click", (e) => {
+        if (!filterPopup?.contains(e.target) && !filterToggle?.contains(e.target)) {
+          filterPopup?.classList.remove("show");
+        }
+      });
+    </script>
 </body>
+
 </html>
