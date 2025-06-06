@@ -303,6 +303,12 @@
         "zh-CN": "🗣️ 中",
         "zh-HK": "🗣️ 粤"
       };
+      const pronunciationLabels = {
+        jyutping: "Jyutping",
+        pinyin: "Pinyin",
+        both: "Jyutping + Pinyin",
+        none: "None"
+      };
       const themeLabels = {
         dark: "☀️",
         light: "🌙"
@@ -513,20 +519,6 @@
         togglePronunciationButton.style.display = show ? "inline" : "none";
       }
 
-      function updateTogglePronunciationButtonLabel() {
-        if (pronunciationMode === "jyutping") {
-          togglePronunciationButton.textContent = "Toggle: Jyutping";
-        } else if (pronunciationMode === "pinyin") {
-          togglePronunciationButton.textContent = "Toggle: Pinyin";
-        } else if (pronunciationMode === "both") {
-          togglePronunciationButton.textContent = "Toggle: Jyutping + Pinyin";
-        } else if (pronunciationMode === "none") {
-          togglePronunciationButton.textContent = "Toggle: Off";
-        } else {
-          togglePronunciationButton.textContent = "Toggle: Jyutping + Pinyin";
-        }
-      }
-
       function jumpToVerse() {
         const val = verseJump.value.trim();
         const matchFull = val.match(/^(\w+)\s+(\d+):(\d+)$/i); // book chapter:verse
@@ -628,7 +620,7 @@
           pronunciationMode = "jyutping";
         }
         localStorage.setItem("pronunciationMode", pronunciationMode);
-        updateTogglePronunciationButtonLabel();
+        updateToggleText(togglePronunciationButton, pronunciationLabels, pronunciationMode);
         onBookOrChapterChange();
       }
       function copyPermalinkOnClick() {
@@ -696,7 +688,7 @@
         }
       });
 
-      updateTogglePronunciationButtonLabel();
+      updateToggleText(togglePronunciationButton, pronunciationLabels, pronunciationMode);
       applyQueryParams();
       loadBibleData();
 
