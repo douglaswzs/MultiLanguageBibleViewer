@@ -19,7 +19,13 @@
       color: var(--text);
     }
 
-    body.dark-mode {
+    [data-theme="light"] body {
+      --bg: #ffffff;
+      --text: #000000;
+      --accent: #f9f9f9;
+    }
+
+    [data-theme="dark"] body {
       --bg: #1e1e1e;
       --text: #e0e0e0;
       --accent: #2c2c2c;
@@ -53,18 +59,29 @@
       background-color: #f0f0f0;
     }
 
-    .jyutping {
+    [data-theme="light"] .jyutping {
       color: #b30000;
       font-size: 0.9em;
     }
 
-    .pinyin {
+    [data-theme="dark"] .jyutping {
+      color: #cd9e9e;
+      font-size: 0.9em;
+    }
+
+    [data-theme="light"] .pinyin {
       color: #0035ff;
       font-size: 0.9em;
     }
 
+    [data-theme="dark"] .pinyin {
+      color: #cfd9ff;
+      font-size: 0.9em;
+    }
+
+
     .highlighted {
-      background-color: #ffffd8 !important;
+      background-color: #fbfb0040 !important;
     }
 
     .horizontal-layout thead,
@@ -96,7 +113,6 @@
     }
 
     .section {
-      background-color: white;
       padding: 1rem;
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -232,12 +248,13 @@
       // =======================
       // Global State
       // =======================
-
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      let currentTheme = localStorage.getItem("theme") || (prefersDark ? "dark" : "light");
 
       // =======================
       // DOM Elements
       // =======================
-      
+
       const bibleHeader = document.getElementById("bibleHeader");
       const bibleBody = document.getElementById("bibleBody");
       const bibleTable = document.getElementById("bibleTable");
@@ -245,7 +262,7 @@
       const lang2Select = document.getElementById("lang2Select");
       const lang3Select = document.getElementById("lang3Select");
       const themeToggle = document.getElementById("themeToggle");
-      const toggleButton = document.getElementById("togglePronunciation");
+      const togglePronunciationButton = document.getElementById("togglePronunciation");
       const verseJump = document.getElementById("verseJump");
       const jumpBtn = document.getElementById("jumpBtn");
       const layoutToggleBtn = document.getElementById("toggleLayout");
@@ -258,6 +275,38 @@
       // =======================
       // Labels & Cycles
       // =======================
+      const languageCycle = {
+        en: "zh",
+        zh: "en+zh",
+        "en+zh": "en+zh+roman",
+        "en+zh+roman": "en"
+      };
+      const languageLabels = {
+        en: "EN",
+        zh: "中",
+        "en+zh": "EN + 中",
+        "en+zh+roman": "EN + 中 + 拼音"
+      };
+      const soundLabels = {
+        on: "🔊 Sound",
+        off: "🔇 Muted"
+      };
+      const ttsCycle = {
+        mute: "en",
+        en: "zh-CN",
+        "zh-CN": "zh-HK",
+        "zh-HK": "mute"
+      };
+      const ttsLabels = {
+        mute: "🔇 TTS",
+        en: "🗣️ EN",
+        "zh-CN": "🗣️ 中",
+        "zh-HK": "🗣️ 粤"
+      };
+      const themeLabels = {
+        dark: "☀️",
+        light: "🌙"
+      };
 
 
       // =======================
@@ -461,16 +510,20 @@
           const val = document.getElementById(id).value;
           return val === "zh_cuv" || val === "zh_ncv";
         });
-        toggleButton.style.display = show ? "inline" : "none";
+        togglePronunciationButton.style.display = show ? "inline" : "none";
       }
 
-      function updateToggleButtonLabel() {
+      function updateTogglePronunciationButtonLabel() {
         if (pronunciationMode === "jyutping") {
-          toggleButton.textContent = "Toggle: Jyutping";
+          togglePronunciationButton.textContent = "Toggle: Jyutping";
         } else if (pronunciationMode === "pinyin") {
-          toggleButton.textContent = "Toggle: Pinyin";
+          togglePronunciationButton.textContent = "Toggle: Pinyin";
+        } else if (pronunciationMode === "both") {
+          togglePronunciationButton.textContent = "Toggle: Jyutping + Pinyin";
+        } else if (pronunciationMode === "none") {
+          togglePronunciationButton.textContent = "Toggle: Off";
         } else {
-          toggleButton.textContent = "Toggle: Jyutping + Pinyin";
+          togglePronunciationButton.textContent = "Toggle: Jyutping + Pinyin";
         }
       }
 
@@ -564,16 +617,18 @@
         localStorage.setItem("chapterSelect", value);
         onBookOrChapterChange();
       }
-      function toggleButtonOnClick() {
+      function togglePronunciationButtonOnClick() {
         if (pronunciationMode === "jyutping") {
           pronunciationMode = "pinyin";
         } else if (pronunciationMode === "pinyin") {
           pronunciationMode = "both";
+        } else if (pronunciationMode === "both") {
+          pronunciationMode = "none";
         } else {
           pronunciationMode = "jyutping";
         }
         localStorage.setItem("pronunciationMode", pronunciationMode);
-        updateToggleButtonLabel();
+        updateTogglePronunciationButtonLabel();
         onBookOrChapterChange();
       }
       function copyPermalinkOnClick() {
@@ -615,8 +670,22 @@
       function filterToggleOnClick() {
         filterPopup?.classList.toggle("show");
       }
-
+      function themeToggleOnClick() {
+        {
+          currentTheme = currentTheme === "dark" ? "light" : "dark";
+          localStorage.setItem("theme", currentTheme);
+          applyTheme(currentTheme);
+        }
+      }
+      function applyTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme);
+        updateToggleText(themeToggle, themeLabels, theme);
+      }
+      function updateToggleText(toggle, labels, currentValue) {
+        toggle.textContent = labels[currentValue];
+      }
       // ---------- INIT ----------
+      applyTheme(currentTheme);
       updateLayoutToggle();
       populateSelectors();
 
@@ -627,7 +696,7 @@
         }
       });
 
-      updateToggleButtonLabel();
+      updateTogglePronunciationButtonLabel();
       applyQueryParams();
       loadBibleData();
 
@@ -640,13 +709,13 @@
       });
 
 
-
       // =======================
       // Events
       // =======================
+      themeToggle?.addEventListener("click", themeToggleOnClick);
       bookSelect.addEventListener("change", bookSelectOnChange);
       chapterSelect.addEventListener("change", chapterOnChange);
-      toggleButton.addEventListener("click", toggleButtonOnClick);
+      togglePronunciationButton.addEventListener("click", togglePronunciationButtonOnClick);
       copyPermalink.addEventListener("click", copyPermalinkOnClick);
       jumpBtn.addEventListener("click", jumpToVerse);
       layoutToggleBtn.addEventListener("click", layoutToggleBtnOnClick);
