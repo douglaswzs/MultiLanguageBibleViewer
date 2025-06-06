@@ -303,6 +303,10 @@
         "zh-CN": "🗣️ 中",
         "zh-HK": "🗣️ 粤"
       };
+      const layoutLabels = {
+        horizontal: "Toggle: Horizontal",
+        side: "Toggle: Side-by-Side"
+      }
       const pronunciationLabels = {
         jyutping: "Jyutping",
         pinyin: "Pinyin",
@@ -644,18 +648,19 @@
           .catch(err => console.error("Copy failed", err));
       }
       function updateLayoutToggle() {
+        let layoutClass = isHorizontal ? "horizontal" : "side";
+        updateToggleText(layoutToggleBtn, layoutLabels, layoutClass);
         if (isHorizontal) {
           bibleTable.classList.add("horizontal-layout");
-          layoutToggleBtn.textContent = "Toggle: Horizontal";
         } else {
           bibleTable.classList.remove("horizontal-layout");
-          layoutToggleBtn.textContent = "Toggle: Side-by-Side";
         }
       }
 
       function layoutToggleBtnOnClick() {
         isHorizontal = !isHorizontal;
-        localStorage.setItem("layoutMode", isHorizontal ? "horizontal" : "side");
+        let layoutClass = isHorizontal ? "horizontal" : "side";
+        localStorage.setItem("layoutMode", layoutClass);
         updateLayoutToggle();
       }
 
@@ -679,6 +684,7 @@
       // ---------- INIT ----------
       applyTheme(currentTheme);
       updateLayoutToggle();
+      updateToggleText(togglePronunciationButton, pronunciationLabels, pronunciationMode);
       populateSelectors();
 
       selects.forEach(id => {
@@ -688,7 +694,7 @@
         }
       });
 
-      updateToggleText(togglePronunciationButton, pronunciationLabels, pronunciationMode);
+
       applyQueryParams();
       loadBibleData();
 
