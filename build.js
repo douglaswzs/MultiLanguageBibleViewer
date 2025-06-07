@@ -1,6 +1,7 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const JavaScriptObfuscator = require('javascript-obfuscator');
 
 const srcDir = 'src';
 const outputJS = 'app.js';
@@ -14,9 +15,20 @@ if (!fs.existsSync(jsPath) || !fs.existsSync(htmlPath)) {
   process.exit(1);
 }
 
-console.log('🔧 Minifying app.js...');
-execSync(`npx terser ${jsPath} -o ${outputJS} -c -m`, { stdio: 'inherit' });
+// --- Obfuscate JS ---
+const inputCode = fs.readFileSync(jsPath, 'utf8');
+console.log('🔐 Obfuscating app.js...');
+const obfuscationResult = JavaScriptObfuscator.obfuscate(inputCode, {
+  compact: true,
+  controlFlowFlattening: true,
+  deadCodeInjection: true,
+  stringArray: true,
+  stringArrayEncoding: ['base64'],
+  stringArrayThreshold: 0.75
+});
+fs.writeFileSync(outputJS, obfuscationResult.getObfuscatedCode());
 
+// --- Minify HTML ---
 console.log('🔧 Minifying index.html...');
 execSync(`npx html-minifier-terser ${htmlPath} -o ${outputHTML} --collapse-whitespace --remove-comments`, { stdio: 'inherit' });
 

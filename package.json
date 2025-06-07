@@ -21,6 +21,6 @@
   "homepage": "https://github.com/douglaswzs/MultiLanguageBibleViewer#readme",
   "devDependencies": {
     "html-minifier-terser": "^7.2.0",
-    "terser": "^5.41.0"
+    "javascript-obfuscator": "^4.1.1"
   }
 }
