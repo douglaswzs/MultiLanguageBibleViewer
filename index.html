@@ -228,16 +228,27 @@
     <script type="module">
       import toJyutping from 'https://unpkg.com/to-jyutping@3.1.1?module';
 
-      const availableBibles = {
-        "ar_svd": "Arabic", "zh_cuv": "Chinese Union Version", "zh_ncv": "New Chinese Version",
-        "de_schlachter": "German", "el_greek": "Modern Greek", "en_bbe": "Basic English",
-        "en_kjv": "King James Version", "eo_esperanto": "Esperanto", "es_rvr": "Reina Valera",
-        "fi_finnish": "Finnish Bible", "fi_pr": "Pyhä Raamattu", "fr_apee": "Le Bible de l'Épée",
-        "ko_ko": "Korean Version", "pt_aa": "Almeida Revisada Imprensa Bíblica",
-        "pt_acf": "Almeida Corrigida e Revisada Fiel", "pt_nvi": "Nova Versão Internacional",
-        "ro_cornilescu": "Versiunea Dumitru Cornilescu", "ru_synodal": "Синодальный перевод",
-        "vi_vietnamese": "Tiếng Việt"
-      };
+const availableBibles = {
+  "ar_svd": "Arabic 🇸🇦",
+  "zh_cuv": "Chinese Union Version 🇭🇰",
+  "zh_ncv": "New Chinese Version 🇹🇼",
+  "de_schlachter": "German 🇩🇪",
+  "el_greek": "Modern Greek 🇬🇷",
+  "en_bbe": "Basic English 🇺🇸",
+  "en_kjv": "King James Version 🇺🇸",
+  "eo_esperanto": "Esperanto 🌍",
+  "es_rvr": "Reina Valera 🇪🇸",
+  "fi_finnish": "Finnish Bible 🇫🇮",
+  "fi_pr": "Pyhä Raamattu 🇫🇮",
+  "fr_apee": "Le Bible de l'Épée 🇫🇷",
+  "ko_ko": "Korean Version 🇰🇷",
+  "pt_aa": "Almeida Revisada Imprensa Bíblica 🇵🇹",
+  "pt_acf": "Almeida Corrigida e Revisada Fiel 🇧🇷",
+  "pt_nvi": "Nova Versão Internacional 🇧🇷",
+  "ro_cornilescu": "Versiunea Dumitru Cornilescu 🇷🇴",
+  "ru_synodal": "Синодальный перевод 🇷🇺",
+  "vi_vietnamese": "Tiếng Việt 🇻🇳"
+};
 
       const selects = ["lang1Select", "lang2Select", "lang3Select"];
       const bibleCache = {};
@@ -273,34 +284,11 @@
       // =======================
       // Labels & Cycles
       // =======================
-      const languageCycle = {
-        en: "zh",
-        zh: "en+zh",
-        "en+zh": "en+zh+roman",
-        "en+zh+roman": "en"
-      };
-      const languageLabels = {
-        en: "EN",
-        zh: "中",
-        "en+zh": "EN + 中",
-        "en+zh+roman": "EN + 中 + 拼音"
-      };
       const soundLabels = {
         on: "🔊 Sound",
         off: "🔇 Muted"
       };
-      const ttsCycle = {
-        mute: "en",
-        en: "zh-CN",
-        "zh-CN": "zh-HK",
-        "zh-HK": "mute"
-      };
-      const ttsLabels = {
-        mute: "🔇 TTS",
-        en: "🗣️ EN",
-        "zh-CN": "🗣️ 中",
-        "zh-HK": "🗣️ 粤"
-      };
+
       const layoutLabels = {
         horizontal: "Toggle: Horizontal",
         side: "Toggle: Side-by-Side"
@@ -434,7 +422,26 @@
         renderChapter(booksForRender);
         checkZhLangSelected();
       }
+      function createVerseLineWithTTS(verseText, langKey, translatedText = null) {
+        const container = document.createElement("div");
+        container.style.display = "flex";
+        container.style.justifyContent = "space-between";
+        container.style.alignItems = "center";
+        container.style.gap = "12px";
 
+        const span = document.createElement("span");
+        span.textContent = translatedText ?? verseText;
+
+        const btn = document.createElement("button");
+        btn.textContent = "🔊";
+        btn.title = "Read aloud";
+        btn.style.cursor = "pointer";
+        btn.onclick = () => speakText(verseText, langKey);
+
+        container.appendChild(span);
+        container.appendChild(btn);
+        return container;
+      }
       function renderChapter(books) {
         const chapIdx = parseInt(chapterSelect.value) || 0;
         const bibleBody = document.getElementById("bibleBody");
@@ -452,15 +459,18 @@
             if (book && book.chapters[chapIdx][v]) {
               const verse = book.chapters[chapIdx][v];
               const verseTxt = `${v + 1}: ${verse}`;
-              td.appendChild(Object.assign(document.createElement("div"), { textContent: verseTxt }));
+              const verseDiv = document.createElement("div");
+
+              const verseLine = createVerseLineWithTTS(`${v + 1}: ${verse}`, book.langKey);
+              td.appendChild(verseLine);
+
 
               if (book.langKey === "zh_cuv" || book.langKey === "zh_ncv") {
                 const showJ = pronunciationMode === "jyutping" || pronunciationMode === "both";
                 const showP = pronunciationMode === "pinyin" || pronunciationMode === "both";
 
                 if (showJ) {
-                  const j = document.createElement("div");
-                  j.textContent = toJyutping.getJyutpingText(verse);
+                  const j = createVerseLineWithTTS(verse, "zh-HK", toJyutping.getJyutpingText(verse));
                   j.className = "jyutping";
                   td.appendChild(j);
                 }
@@ -625,6 +635,56 @@
         updateToggleText(togglePronunciationButton, pronunciationLabels, pronunciationMode);
         onBookOrChapterChange();
       }
+      function speakText(text, langKey) {
+        if (!window.speechSynthesis) {
+          alert("Your browser does not support text-to-speech.");
+          return;
+        }
+
+        // Stop any current speech
+        if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+          window.speechSynthesis.cancel();
+        }
+        if (langKey == "zh_cuv") {
+          text = text.replace(/\s+/g, '');
+        }
+
+        const utterance = new SpeechSynthesisUtterance(text);
+
+        // Map Bible language key to browser TTS language codes
+        const langMap = {
+          "zh-HK": "zh-HK",
+          "zh_cuv": "zh-CN",
+          "zh_ncv": "zh-CN",
+          "en_kjv": "en-US",
+          "en_bbe": "en-US",
+          "es_rvr": "es-ES",
+          "fr_apee": "fr-FR",
+          "de_schlachter": "de-DE",
+          "ru_synodal": "ru-RU",
+          "ko_ko": "ko-KR",
+          "vi_vietnamese": "vi-VN",
+          "pt_aa": "pt-PT",
+          "pt_acf": "pt-BR",
+          "pt_nvi": "pt-BR",
+          "el_greek": "el-GR",
+          "ar_svd": "ar-SA",
+          "eo_esperanto": "eo",
+          "fi_finnish": "fi-FI",
+          "fi_pr": "fi-FI",
+          "ro_cornilescu": "ro-RO"
+        };
+
+        utterance.lang = langMap[langKey] || "en-US";
+
+        const voices = window.speechSynthesis.getVoices();
+        const matchedVoice = voices.find(v => v.lang === utterance.lang);
+        if (matchedVoice) utterance.voice = matchedVoice;
+
+        // Speak the verse
+        window.speechSynthesis.speak(utterance);
+      }
+
       function copyPermalinkOnClick() {
         const lang1 = lang1Select.value;
         const lang2 = lang2Select.value;
@@ -691,7 +751,9 @@
           document.getElementById(id).value = saved;
         }
       });
-
+      window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.getVoices();
+      };
 
       applyQueryParams();
       loadBibleData();
