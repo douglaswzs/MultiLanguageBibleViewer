@@ -1,0 +1,26 @@
+{
+  "name": "multilanguagebible",
+  "version": "1.0.0",
+  "description": "A lightweight and flexible web-based tool for reading and comparing Bible verses in multiple languages side-by-side. Includes pronunciation support for Chinese (Jyutping and Pinyin) to help with learning and understanding the text.",
+  "main": "build.js",
+  "scripts": {
+    "start": "npx serve",
+    "build": "node build.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/douglaswzs/MultiLanguageBibleViewer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/douglaswzs/MultiLanguageBibleViewer/issues"
+  },
+  "homepage": "https://github.com/douglaswzs/MultiLanguageBibleViewer#readme",
+  "devDependencies": {
+    "html-minifier-terser": "^7.2.0",
+    "terser": "^5.41.0"
+  }
+}

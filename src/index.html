@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multi-Language Bible Viewer</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #000000;
+      --accent: #f5f5f5;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    [data-theme="light"] body {
+      --bg: #ffffff;
+      --text: #000000;
+      --accent: #f5f5f5;
+    }
+
+    [data-theme="dark"] body {
+      --bg: #1e1e1e;
+      --text: #e0e0e0;
+      --accent: #2c2c2c;
+    }
+
+    select,
+    input,
+    button {
+      margin: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      vertical-align: top;
+    }
+
+    tr:nth-child(even) {
+      background-color: var(--accent);
+    }
+
+    .header {
+      font-weight: bold;
+      text-align: center;
+      background-color: #f0f0f0;
+    }
+
+    [data-theme="light"] .jyutping {
+      color: #b30000;
+      font-size: 0.9em;
+    }
+
+    [data-theme="dark"] .jyutping {
+      color: #cd9e9e;
+      font-size: 0.9em;
+    }
+
+    [data-theme="light"] .pinyin {
+      color: #0035ff;
+      font-size: 0.9em;
+    }
+
+    [data-theme="dark"] .pinyin {
+      color: #cfd9ff;
+      font-size: 0.9em;
+    }
+
+
+    .highlighted {
+      background-color: #fbfb0040 !important;
+    }
+
+    .horizontal-layout thead,
+    .horizontal-layout tbody,
+    .horizontal-layout th,
+    .horizontal-layout td,
+    .horizontal-layout tr {
+      display: block;
+    }
+
+    .horizontal-layout th {
+      position: sticky;
+      top: 0;
+      background-color: #f0f0f0;
+    }
+
+    .horizontal-layout td {
+      border: none;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .top-controls {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .section {
+      padding: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1.5rem;
+    }
+
+    .popup {
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      background: white;
+      color: black;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+      z-index: 1001;
+      display: none;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    .popup h3 {
+      margin-top: 0;
+    }
+
+    .popup-content label {
+      display: block;
+      margin: 8px 0;
+    }
+
+    .popup button {
+      margin-top: 10px;
+    }
+
+    .popup.show {
+      display: block;
+    }
+
+    @media (max-width: 768px) {
+
+      table,
+      thead,
+      tbody,
+      th,
+      td,
+      tr {
+        display: block;
+      }
+
+      th {
+        position: sticky;
+        top: 0;
+        background-color: #f0f0f0;
+      }
+
+      td {
+        border: none;
+        border-bottom: 1px solid #ccc;
+      }
+
+      #toggleLayout {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="section">
+    <h1>Multi-Language Bible Viewer</h1>
+    <div class="top-controls">
+      <button id="filterToggle" class="theme-toggle">☰ Settings</button>
+    </div>
+    <label>Select up to 3 languages:</label><br />
+    <select id="lang1Select">
+      <option value="">--Select Language--</option>
+    </select>
+    <select id="lang2Select">
+      <option value="">--Select Language--</option>
+    </select>
+    <select id="lang3Select">
+      <option value="">--Select Language--</option>
+    </select>
+    <button id="copyPermalink">Copy Permalink</button>
+    <br />
+
+    <label for="bookSelect">Book:</label>
+    <select id="bookSelect"></select>
+
+    <label for="chapterSelect">Chapter:</label>
+    <select id="chapterSelect"></select>
+
+    <button id="togglePronunciation">Toggle: Jyutping</button>
+    <button id="toggleLayout">Toggle: Side-by-Side</button>
+    <br />
+    <label for="verseJump">Jump to (e.g., John 3:16 or 3:16):</label>
+    <input type="text" id="verseJump" placeholder="book chapter:verse or chapter:verse" />
+    <button id="jumpBtn">Go</button>
+  </div>
+  <table id="bibleTable">
+    <thead id="bibleHeader"></thead>
+    <tbody id="bibleBody"></tbody>
+  </table>
+  </div>
+  <div id="categoryFilterPopup" class="popup">
+    <div class="popup-content">
+      <h3>Settings</h3>
+      <button id="themeToggle" class="theme-toggle">🌙</button>
+      <button id="ttsToggle" class="theme-toggle">🔇 TTS</button>
+      <button id="soundToggle" class="theme-toggle">🔊 Sound</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pinyin-pro/3.26.0/index.min.js"></script>
+    <script type="module" src="./app.js"></script>
+</body>
+
+</html>
