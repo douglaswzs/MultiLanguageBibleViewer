@@ -26,6 +26,7 @@ const availableBibles = {
 const selects = ["lang1Select", "lang2Select", "lang3Select"];
 const bibleCache = {};
 let pronunciationMode = localStorage.getItem("pronunciationMode") || 'both';
+let cantonesePronunciationModeSelect = localStorage.getItem("cantonesePronunciationModeSelect") || '';
 let isHorizontal = localStorage.getItem("layoutMode") === "horizontal";
 // =======================
 // Global State
@@ -54,6 +55,8 @@ const chapterSelect = document.getElementById("chapterSelect");
 const bookSelect = document.getElementById("bookSelect");
 const filterToggle = document.getElementById("filterToggle");
 const filterPopup = document.getElementById("categoryFilterPopup");
+const closePopupBtn = document.getElementById("closePopup");
+const cantoneseModeSelect = document.getElementById("cantoneseModeSelect");
 
 // =======================
 // Labels & Cycles
@@ -82,6 +85,22 @@ const themeLabels = {
 // =======================
 // Utility Functions
 // =======================
+function populateCantoneseMode() {
+  if (!cantoneseModeSelect) return;
+  const cantoneseOptions = [
+    { value: "ipatones", text: "IPATones" },
+    { value: "diacritics", text: "Diacritics" },
+    { value: "superscript", text: "Superscript" },
+    { value: "numbers", text: "Numbers" }
+  ];
+  cantoneseOptions.forEach(optionData => {
+    const option = document.createElement("option");
+    option.value = optionData.value;
+    option.textContent = optionData.text;
+    cantoneseModeSelect.appendChild(option);
+  });
+  cantoneseModeSelect.value = cantonesePronunciationModeSelect;
+}
 function populateSelectors() {
   selects.forEach(id => {
     const select = document.getElementById(id);
@@ -196,6 +215,78 @@ async function loadBibleData() {
   renderChapter(booksForRender);
   checkZhLangSelected();
 }
+
+function getJyutpingText(verse) {
+  function convertJyutpingToSuperscript(jyutpingString) {
+    const superscriptMap = {
+      '1': '¹',
+      '2': '²',
+      '3': '³',
+      '4': '⁴',
+      '5': '⁵',
+      '6': '⁶'
+    };
+
+    return jyutpingString.replace(/[1-9]/g, match => superscriptMap[match]);
+  }
+  function convertJyutpingToIPATones(jyutpingString) {
+    const ipaToneMap = {
+      '1': '˥',   // High level
+      '2': '˧˥',  // High rising
+      '3': '˧',   // Mid level
+      '4': '˨˩',  // Low falling
+      '5': '˩˧',  // Low rising
+      '6': '˩'    // Low level
+    };
+
+    return jyutpingString.replace(/[1-6]/g, match => ipaToneMap[match] || match);
+  }
+  function convertJyutpingToDiacritics(jyutpingString) {
+    const toneMap = {
+      'a': ['ā', 'á', 'a', 'à', 'ǎ', 'a̱'],
+      'e': ['ē', 'é', 'e', 'è', 'ě', 'e̱'],
+      'i': ['ī', 'í', 'i', 'ì', 'ǐ', 'i̱'],
+      'o': ['ō', 'ó', 'o', 'ò', 'ǒ', 'o̱'],
+      'u': ['ū', 'ú', 'u', 'ù', 'ǔ', 'u̱'],
+      'oe': ['œ̄', 'œ́', 'œ', 'œ̀', 'œ̌', 'œ̱'],
+      'yu': ['ǖ', 'ǘ', 'yu', 'ǜ', 'ǚ', 'y̱u']
+    };
+
+    // Match syllables ending with tone numbers 1–6
+    return jyutpingString.replace(/([a-z]+)([1-6])/gi, (_, base, toneStr) => {
+      const tone = parseInt(toneStr) - 1;
+
+      // Search for vowel groups in order of complexity
+      const vowels = ['yu', 'oe', 'a', 'e', 'i', 'o', 'u'];
+      for (let v of vowels) {
+        if (base.includes(v)) {
+          const replacement = toneMap[v]?.[tone];
+          if (!replacement) return base;
+
+          // Replace only the first instance of the vowel
+          const result = base.replace(v, replacement);
+          return result;
+        }
+      }
+
+      // If no vowel match, return original
+      return base;
+    });
+  }
+
+  let jyutpingString = toJyutping.getJyutpingText(verse);
+  if (cantonesePronunciationModeSelect === "diacritics") {
+    return convertJyutpingToDiacritics(jyutpingString);
+  } else if (cantonesePronunciationModeSelect === "superscript") {
+    return convertJyutpingToSuperscript(jyutpingString);
+  } else if (cantonesePronunciationModeSelect === "ipatones") {
+    return convertJyutpingToIPATones(jyutpingString);
+  } else if (cantonesePronunciationModeSelect === "numbers") {
+    return jyutpingString;
+  } else {
+    return jyutpingString;
+  }
+}
 function createVerseLineWithTTS(verseText, langKey, translatedText = null) {
   const container = document.createElement("div");
   container.style.display = "flex";
@@ -244,7 +335,7 @@ function renderChapter(books) {
           const showP = pronunciationMode === "pinyin" || pronunciationMode === "both";
 
           if (showJ) {
-            const j = createVerseLineWithTTS(verse, "zh-HK", toJyutping.getJyutpingText(verse));
+            const j = createVerseLineWithTTS(verse, "zh-HK", getJyutpingText(verse));
             j.className = "jyutping";
             td.appendChild(j);
           }
@@ -395,6 +486,12 @@ function chapterOnChange() {
   localStorage.setItem("chapterSelect", value);
   onBookOrChapterChange();
 }
+function cantonesePronunciationChange() {
+  const value = cantoneseModeSelect.value;
+  cantonesePronunciationModeSelect = value;
+  localStorage.setItem("cantonesePronunciationModeSelect", value);
+  onBookOrChapterChange();
+}
 function togglePronunciationButtonOnClick() {
   if (pronunciationMode === "jyutping") {
     pronunciationMode = "pinyin";
@@ -529,6 +626,7 @@ applyTheme(currentTheme);
 updateLayoutToggle();
 updateToggleText(togglePronunciationButton, pronunciationLabels, pronunciationMode);
 populateSelectors();
+populateCantoneseMode();
 
 selects.forEach(id => {
   const saved = localStorage.getItem(id);
@@ -558,11 +656,15 @@ selects.forEach(id => {
 themeToggle?.addEventListener("click", themeToggleOnClick);
 bookSelect.addEventListener("change", bookSelectOnChange);
 chapterSelect.addEventListener("change", chapterOnChange);
+cantoneseModeSelect.addEventListener("change", cantonesePronunciationChange);
 togglePronunciationButton.addEventListener("click", togglePronunciationButtonOnClick);
 copyPermalink.addEventListener("click", copyPermalinkOnClick);
 jumpBtn.addEventListener("click", jumpToVerse);
 layoutToggleBtn.addEventListener("click", layoutToggleBtnOnClick);
 filterToggle?.addEventListener("click", filterToggleOnClick);
+closePopupBtn?.addEventListener("click", (e) => {
+  filterPopup?.classList.remove("show");
+});
 document?.addEventListener("click", (e) => {
   if (!filterPopup?.contains(e.target) && !filterToggle?.contains(e.target)) {
     filterPopup?.classList.remove("show");

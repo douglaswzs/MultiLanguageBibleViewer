@@ -6,6 +6,7 @@
   "scripts": {
     "start": "npx serve",
     "build": "node build.js",
+    "build:dev": "copy src\\app.js . && copy src\\index.html .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
